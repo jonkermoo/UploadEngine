@@ -1,6 +1,13 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { getDatabase, closeDatabase } from './db/database'
+import { registerDashboardHandlers } from './ipc/dashboard.ipc'
+import { registerAccountHandlers } from './ipc/accounts.ipc'
+import { registerAssetHandlers } from './ipc/assets.ipc'
+import { registerProjectHandlers } from './ipc/projects.ipc'
+import { registerJobHandlers } from './ipc/jobs.ipc'
+import { registerUploadHandlers } from './ipc/uploads.ipc'
+import { registerSettingsHandlers } from './ipc/settings.ipc'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -36,6 +43,15 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   getDatabase()
+
+  registerDashboardHandlers()
+  registerAccountHandlers()
+  registerAssetHandlers()
+  registerProjectHandlers()
+  registerJobHandlers()
+  registerUploadHandlers()
+  registerSettingsHandlers()
+
   createWindow()
 
   app.on('activate', () => {
