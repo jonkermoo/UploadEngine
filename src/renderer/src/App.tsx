@@ -1,4 +1,7 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HashRouter, Routes, Route, NavLink } from 'react-router-dom'
+
+const queryClient = new QueryClient()
 import {
   LayoutDashboard,
   Users,
@@ -63,6 +66,7 @@ function Sidebar() {
 
 export default function App() {
   return (
+    <QueryClientProvider client={queryClient}>
     <HashRouter>
       <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
         <Sidebar />
@@ -81,5 +85,6 @@ export default function App() {
         </main>
       </div>
     </HashRouter>
+    </QueryClientProvider>
   )
 }
