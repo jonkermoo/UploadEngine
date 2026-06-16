@@ -1,10 +1,14 @@
 import type Database from 'better-sqlite3'
 
 export function seedDatabase(db: Database.Database): void {
-  // Platform
+  // INSERT OR IGNORE silently skips the insert if a row with the same UNIQUE key already exists.
+  // This makes seeds safe to run on every app launch — they only insert on first run.
+
   db.prepare(`INSERT OR IGNORE INTO platforms (name) VALUES ('youtube')`).run()
 
-  // Render presets
+  // Prepare the statement once and reuse it for each preset — more efficient than
+  // calling db.prepare() inside a loop. Named parameters (@name, @aspect_ratio, etc.)
+  // are matched to object keys when you call .run(object).
   const insertPreset = db.prepare(`
     INSERT OR IGNORE INTO render_presets (name, aspect_ratio, width, height, fps, video_bitrate, audio_bitrate)
     VALUES (@name, @aspect_ratio, @width, @height, @fps, @video_bitrate, @audio_bitrate)
@@ -20,7 +24,8 @@ export function seedDatabase(db: Database.Database): void {
     insertPreset.run(preset)
   }
 
-  // MVP template
+  // Template config is stored as a JSON string because SQLite has no native JSON column type.
+  // The renderer and services parse this string back into an object when they need it.
   const ambientLoopConfig = JSON.stringify({
     supports_music: true,
     supports_captions: false,
@@ -33,7 +38,8 @@ export function seedDatabase(db: Database.Database): void {
     VALUES ('Ambient Loop', 'ambient_loop', 'Loop a background video and add music for a selected duration.', ?)
   `).run(ambientLoopConfig)
 
-  // Default app settings
+  // Seed default app settings as empty strings so the Settings page can always read them,
+  // even before the user has configured anything.
   const insertSetting = db.prepare(`
     INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?)
   `)
