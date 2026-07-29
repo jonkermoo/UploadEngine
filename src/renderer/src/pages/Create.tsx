@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle, ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { CheckCircle, ChevronRight, Play } from 'lucide-react'
 import { api } from '../api'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -445,9 +446,11 @@ function MetadataStep({ draft, setDraft }: { draft: ProjectDraft; setDraft: Reac
 export default function Create() {
   const [step, setStep]   = useState(0)
   const [draft, setDraft] = useState<ProjectDraft>(INITIAL_DRAFT)
-  const [saving, setSaving]   = useState(false)
-  const [savedId, setSavedId] = useState<number | null>(null)
+  const [saving, setSaving]     = useState(false)
+  const [queueing, setQueueing] = useState(false)
+  const [savedId, setSavedId]   = useState<number | null>(null)
   const queryClient = useQueryClient()
+  const navigate    = useNavigate()
 
   const isLastStep = step === STEP_LABELS.length - 1
 
@@ -488,22 +491,46 @@ export default function Create() {
     }
   }
 
-  // Show a success screen after saving — the project is now in SQLite ready for Phase 7.
+  // Show a success screen after saving — the project is now in SQLite ready for rendering.
   if (savedId !== null) {
+    async function handleStartRender() {
+      setQueueing(true)
+      try {
+        await api.jobs.createRender(savedId!)
+        // Invalidate both queries so Jobs and Dashboard immediately reflect the new job.
+        await queryClient.invalidateQueries({ queryKey: ['jobs'] })
+        await queryClient.invalidateQueries({ queryKey: ['dashboard:summary'] })
+        navigate('/jobs')
+      } finally {
+        setQueueing(false)
+      }
+    }
+
     return (
       <div className="p-6 max-w-lg">
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 text-center">
           <CheckCircle size={40} className="text-green-400 mx-auto mb-4" />
           <h2 className="text-base font-semibold text-white mb-1">Project saved</h2>
           <p className="text-sm text-gray-400 mb-6">
-            Your project has been saved as a draft. Rendering will be available in Phase 7.
+            Your project is ready. Start rendering now or come back later from the Jobs page.
           </p>
-          <button
-            onClick={() => { setStep(0); setDraft(INITIAL_DRAFT); setSavedId(null) }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-md transition-colors"
-          >
-            Create another
-          </button>
+          <div className="flex gap-3 justify-center">
+            {/* Primary action: queue the render immediately and navigate to Jobs */}
+            <button
+              onClick={handleStartRender}
+              disabled={queueing}
+              className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm rounded-md transition-colors"
+            >
+              <Play size={14} />
+              {queueing ? 'Starting…' : 'Start Render'}
+            </button>
+            <button
+              onClick={() => { setStep(0); setDraft(INITIAL_DRAFT); setSavedId(null) }}
+              className="px-4 py-2 text-gray-400 hover:text-white text-sm rounded-md border border-gray-600 hover:border-gray-500 transition-colors"
+            >
+              Create another
+            </button>
+          </div>
         </div>
       </div>
     )

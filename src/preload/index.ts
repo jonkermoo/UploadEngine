@@ -31,8 +31,12 @@ contextBridge.exposeInMainWorld('api', {
     delete: (id: number) => ipcRenderer.invoke('projects:delete', id),
   },
   jobs: {
-    list: (status?: string) => ipcRenderer.invoke('jobs:list', status),
-    get:  (id: number)      => ipcRenderer.invoke('jobs:get', id),
+    list:         (status?: string)  => ipcRenderer.invoke('jobs:list', status),
+    get:          (id: number)       => ipcRenderer.invoke('jobs:get', id),
+    createRender: (projectId: number) => ipcRenderer.invoke('jobs:createRender', projectId),
+    retry:        (id: number)       => ipcRenderer.invoke('jobs:retry', id),
+    cancel:       (id: number)       => ipcRenderer.invoke('jobs:cancel', id),
+    deleteTemp:   (id: number)       => ipcRenderer.invoke('jobs:deleteTemp', id),
   },
   uploads: {
     list: () => ipcRenderer.invoke('uploads:list'),

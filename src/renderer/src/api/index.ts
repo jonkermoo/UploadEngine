@@ -36,8 +36,12 @@ declare global {
         delete: (id: number) => Promise<{ success: boolean }>
       }
       jobs: {
-        list: (status?: string) => Promise<unknown[]>
-        get:  (id: number) => Promise<unknown>
+        list:         (status?: string)   => Promise<unknown[]>
+        get:          (id: number)        => Promise<unknown>
+        createRender: (projectId: number) => Promise<unknown>
+        retry:        (id: number)        => Promise<unknown>
+        cancel:       (id: number)        => Promise<{ success: boolean }>
+        deleteTemp:   (id: number)        => Promise<{ success: boolean }>
       }
       uploads: {
         list: () => Promise<unknown[]>
